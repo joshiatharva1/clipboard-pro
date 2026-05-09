@@ -35,22 +35,17 @@
   </Window.Resources>
 
   <DockPanel Margin="14">
-    <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
+    <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
       <Grid.ColumnDefinitions>
         <ColumnDefinition />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
 
-      <StackPanel>
-        <TextBlock Text="JobFill Helper"
-                   FontSize="22"
-                   FontWeight="SemiBold"
-                   Foreground="#0F172A" />
-        <TextBlock Text="{Binding StatusText}"
-                   Margin="0,3,0,0"
-                   FontSize="12"
-                   Foreground="#64748B" />
-      </StackPanel>
+      <TextBlock Text="{Binding StatusText}"
+                 FontSize="12"
+                 Foreground="#64748B"
+                 TextTrimming="CharacterEllipsis"
+                 VerticalAlignment="Center" />
 
       <StackPanel Grid.Column="1"
                   Orientation="Horizontal"
