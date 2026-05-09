@@ -11,6 +11,7 @@
         WindowStartupLocation="CenterScreen"
         Background="#F8FAFC">
   <Window.Resources>
+    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <Style x:Key="IconButton" TargetType="Button">
       <Setter Property="MinWidth" Value="42" />
       <Setter Property="Height" Value="34" />
@@ -34,8 +35,8 @@
     </Style>
   </Window.Resources>
 
-  <DockPanel Margin="14">
-    <Grid DockPanel.Dock="Top" Margin="0,0,0,8">
+  <DockPanel Margin="10">
+    <Grid DockPanel.Dock="Top" Margin="0,0,0,6">
       <Grid.ColumnDefinitions>
         <ColumnDefinition />
         <ColumnDefinition Width="Auto" />
@@ -62,7 +63,8 @@
     <Border DockPanel.Dock="Bottom"
             BorderThickness="1,0,0,0"
             BorderBrush="#E2E8F0"
-            Padding="0,12,0,0">
+            Padding="0,10,0,0"
+            Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}">
       <Grid>
         <Grid.ColumnDefinitions>
           <ColumnDefinition />
@@ -70,16 +72,14 @@
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-                <Button Content="+ Add"
-                        Style="{StaticResource IconButton}"
-                        HorizontalAlignment="Left"
-                        IsEnabled="{Binding IsEditMode}"
-                        Click="AddField_Click" />
-                <Button Grid.Column="1"
-                        Content="Save"
-                        Style="{StaticResource IconButton}"
-                        IsEnabled="{Binding IsEditMode}"
-                        Click="Save_Click" />
+        <Button Content="+ Add"
+                Style="{StaticResource IconButton}"
+                HorizontalAlignment="Left"
+                Click="AddField_Click" />
+        <Button Grid.Column="1"
+                Content="Save"
+                Style="{StaticResource IconButton}"
+                Click="Save_Click" />
         <Button Grid.Column="2"
                 Content="Save &amp; Close"
                 Style="{StaticResource PrimaryButton}"
@@ -92,57 +92,19 @@
         <ItemsControl.ItemTemplate>
           <DataTemplate DataType="{x:Type models:FillField}">
             <Border Background="White"
-                    BorderBrush="#E2E8F0"
+                    BorderBrush="#CBD5E1"
                     BorderThickness="1"
                     CornerRadius="6"
-                    Padding="10"
-                    Margin="0,0,0,8">
-              <Grid>
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition />
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <TextBox Grid.ColumnSpan="4"
-                         Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
-                         AcceptsReturn="True"
-                         IsReadOnly="{Binding DataContext.IsPasteMode, RelativeSource={RelativeSource AncestorType=Window}}"
-                         TextWrapping="Wrap"
-                         MinHeight="38"
-                         MaxHeight="96"
-                         Margin="0,0,0,10"
-                         Foreground="#334155" />
-
-                <TextBlock Grid.Row="1"
-                           Text="{Binding Value}"
-                           Foreground="#64748B"
-                           FontSize="12"
-                           TextTrimming="CharacterEllipsis"
-                           VerticalAlignment="Center" />
-
-                <Button Grid.Row="1"
-                        Grid.Column="1"
-                        Content="Copy"
-                        Style="{StaticResource IconButton}"
-                        Click="CopyField_Click" />
-                <Button Grid.Row="1"
-                        Grid.Column="2"
-                        Content="Paste"
-                        Style="{StaticResource PrimaryButton}"
-                        Click="PasteField_Click" />
-                <Button Grid.Row="1"
-                        Grid.Column="3"
-                        Content="X"
-                        Style="{StaticResource IconButton}"
-                        IsEnabled="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=Window}}"
-                        Click="RemoveField_Click" />
-              </Grid>
+                    Padding="6"
+                    Margin="0,0,0,6"
+                    PreviewMouseLeftButtonDown="FieldCard_PreviewMouseLeftButtonDown">
+              <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                       AcceptsReturn="True"
+                       IsReadOnly="{Binding DataContext.IsPasteMode, RelativeSource={RelativeSource AncestorType=Window}}"
+                       TextWrapping="Wrap"
+                       MinHeight="34"
+                       MaxHeight="72"
+                       Foreground="#334155" />
             </Border>
           </DataTemplate>
         </ItemsControl.ItemTemplate>

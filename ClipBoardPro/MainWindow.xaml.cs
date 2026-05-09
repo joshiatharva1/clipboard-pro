@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Input;
 using JobFillHelper.Models;
 using JobFillHelper.Services;
 
@@ -93,35 +94,16 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    private async void PasteField_Click(object sender, RoutedEventArgs e)
+    private async void FieldCard_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (GetField(sender) is not { } field)
+        if (!IsPasteMode || GetField(sender) is not { } field)
         {
             return;
         }
 
+        e.Handled = true;
         var result = await _pasteService.PasteTextAsync(field.Value);
         StatusText = result;
-    }
-
-    private void CopyField_Click(object sender, RoutedEventArgs e)
-    {
-        if (GetField(sender) is not { } field)
-        {
-            return;
-        }
-
-        _pasteService.CopyText(field.Value);
-        StatusText = "Copied.";
-    }
-
-    private void RemoveField_Click(object sender, RoutedEventArgs e)
-    {
-        if (GetField(sender) is { } field)
-        {
-            Fields.Remove(field);
-            StatusText = "Field removed.";
-        }
     }
 
     private void AddField_Click(object sender, RoutedEventArgs e)
