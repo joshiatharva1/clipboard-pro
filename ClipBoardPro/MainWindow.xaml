@@ -101,7 +101,6 @@
                 <Grid.RowDefinitions>
                   <RowDefinition Height="Auto" />
                   <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition />
@@ -111,40 +110,33 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBox Grid.ColumnSpan="4"
-                         Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}"
-                         FontWeight="SemiBold"
-                         IsReadOnly="{Binding DataContext.IsPasteMode, RelativeSource={RelativeSource AncestorType=Window}}"
-                         Foreground="#0F172A" />
-
-                <TextBox Grid.Row="1"
-                         Grid.ColumnSpan="4"
                          Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
                          AcceptsReturn="True"
                          IsReadOnly="{Binding DataContext.IsPasteMode, RelativeSource={RelativeSource AncestorType=Window}}"
                          TextWrapping="Wrap"
                          MinHeight="38"
                          MaxHeight="96"
-                         Margin="0,8,0,10"
+                         Margin="0,0,0,10"
                          Foreground="#334155" />
 
-                <TextBlock Grid.Row="2"
+                <TextBlock Grid.Row="1"
                            Text="{Binding Value}"
                            Foreground="#64748B"
                            FontSize="12"
                            TextTrimming="CharacterEllipsis"
                            VerticalAlignment="Center" />
 
-                <Button Grid.Row="2"
+                <Button Grid.Row="1"
                         Grid.Column="1"
                         Content="Copy"
                         Style="{StaticResource IconButton}"
                         Click="CopyField_Click" />
-                <Button Grid.Row="2"
+                <Button Grid.Row="1"
                         Grid.Column="2"
                         Content="Paste"
                         Style="{StaticResource PrimaryButton}"
                         Click="PasteField_Click" />
-                <Button Grid.Row="2"
+                <Button Grid.Row="1"
                         Grid.Column="3"
                         Content="X"
                         Style="{StaticResource IconButton}"

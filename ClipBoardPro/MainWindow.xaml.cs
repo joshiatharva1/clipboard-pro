@@ -101,7 +101,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         var result = await _pasteService.PasteTextAsync(field.Value);
-        StatusText = $"{field.Label}: {result}";
+        StatusText = result;
     }
 
     private void CopyField_Click(object sender, RoutedEventArgs e)
@@ -112,7 +112,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
 
         _pasteService.CopyText(field.Value);
-        StatusText = $"Copied {field.Label}.";
+        StatusText = "Copied.";
     }
 
     private void RemoveField_Click(object sender, RoutedEventArgs e)
@@ -126,7 +126,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void AddField_Click(object sender, RoutedEventArgs e)
     {
-        Fields.Add(new FillField { Label = "New field", Value = "" });
+        Fields.Add(new FillField { Value = "" });
         StatusText = "New field added.";
     }
 
