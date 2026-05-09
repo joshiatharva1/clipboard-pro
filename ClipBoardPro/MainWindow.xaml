@@ -1,0 +1,165 @@
+<Window x:Class="JobFillHelper.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:JobFillHelper.Models"
+        Title="JobFill Helper"
+        Width="390"
+        MinWidth="340"
+        Height="620"
+        MinHeight="420"
+        Topmost="True"
+        WindowStartupLocation="CenterScreen"
+        Background="#F8FAFC">
+  <Window.Resources>
+    <Style x:Key="IconButton" TargetType="Button">
+      <Setter Property="MinWidth" Value="42" />
+      <Setter Property="Height" Value="34" />
+      <Setter Property="Margin" Value="4,0,0,0" />
+      <Setter Property="Padding" Value="10,0" />
+      <Setter Property="Background" Value="#E2E8F0" />
+      <Setter Property="BorderBrush" Value="#CBD5E1" />
+      <Setter Property="Foreground" Value="#0F172A" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
+      <Setter Property="Background" Value="#2563EB" />
+      <Setter Property="BorderBrush" Value="#1D4ED8" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style TargetType="TextBox">
+      <Setter Property="Padding" Value="8,6" />
+      <Setter Property="BorderBrush" Value="#CBD5E1" />
+      <Setter Property="Background" Value="White" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+  </Window.Resources>
+
+  <DockPanel Margin="14">
+    <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+
+      <StackPanel>
+        <TextBlock Text="JobFill Helper"
+                   FontSize="22"
+                   FontWeight="SemiBold"
+                   Foreground="#0F172A" />
+        <TextBlock Text="{Binding StatusText}"
+                   Margin="0,3,0,0"
+                   FontSize="12"
+                   Foreground="#64748B" />
+      </StackPanel>
+
+      <StackPanel Grid.Column="1"
+                  Orientation="Horizontal"
+                  VerticalAlignment="Center"
+                  Margin="12,0,0,0">
+        <CheckBox Content="Edit"
+                  IsChecked="{Binding IsEditMode}"
+                  Margin="0,0,10,0" />
+        <CheckBox Content="Top"
+                  IsChecked="{Binding IsAlwaysOnTop}" />
+      </StackPanel>
+    </Grid>
+
+    <Border DockPanel.Dock="Bottom"
+            BorderThickness="1,0,0,0"
+            BorderBrush="#E2E8F0"
+            Padding="0,12,0,0">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+                <Button Content="+ Add"
+                        Style="{StaticResource IconButton}"
+                        HorizontalAlignment="Left"
+                        IsEnabled="{Binding IsEditMode}"
+                        Click="AddField_Click" />
+                <Button Grid.Column="1"
+                        Content="Save"
+                        Style="{StaticResource IconButton}"
+                        IsEnabled="{Binding IsEditMode}"
+                        Click="Save_Click" />
+        <Button Grid.Column="2"
+                Content="Save &amp; Close"
+                Style="{StaticResource PrimaryButton}"
+                Click="SaveAndClose_Click" />
+      </Grid>
+    </Border>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+      <ItemsControl ItemsSource="{Binding Fields}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate DataType="{x:Type models:FillField}">
+            <Border Background="White"
+                    BorderBrush="#E2E8F0"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="10"
+                    Margin="0,0,0,8">
+              <Grid>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.ColumnSpan="4"
+                         Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}"
+                         FontWeight="SemiBold"
+                         IsReadOnly="{Binding DataContext.IsPasteMode, RelativeSource={RelativeSource AncestorType=Window}}"
+                         Foreground="#0F172A" />
+
+                <TextBox Grid.Row="1"
+                         Grid.ColumnSpan="4"
+                         Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True"
+                         IsReadOnly="{Binding DataContext.IsPasteMode, RelativeSource={RelativeSource AncestorType=Window}}"
+                         TextWrapping="Wrap"
+                         MinHeight="38"
+                         MaxHeight="96"
+                         Margin="0,8,0,10"
+                         Foreground="#334155" />
+
+                <TextBlock Grid.Row="2"
+                           Text="{Binding Value}"
+                           Foreground="#64748B"
+                           FontSize="12"
+                           TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center" />
+
+                <Button Grid.Row="2"
+                        Grid.Column="1"
+                        Content="Copy"
+                        Style="{StaticResource IconButton}"
+                        Click="CopyField_Click" />
+                <Button Grid.Row="2"
+                        Grid.Column="2"
+                        Content="Paste"
+                        Style="{StaticResource PrimaryButton}"
+                        Click="PasteField_Click" />
+                <Button Grid.Row="2"
+                        Grid.Column="3"
+                        Content="X"
+                        Style="{StaticResource IconButton}"
+                        IsEnabled="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=Window}}"
+                        Click="RemoveField_Click" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </DockPanel>
+</Window>
