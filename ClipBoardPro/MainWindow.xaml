@@ -11,21 +11,45 @@
         WindowStartupLocation="CenterScreen"
         Background="#F8FAFC">
   <Window.Resources>
-    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <Style x:Key="IconButton" TargetType="Button">
-      <Setter Property="MinWidth" Value="42" />
+      <Setter Property="MinWidth" Value="34" />
+      <Setter Property="Width" Value="34" />
       <Setter Property="Height" Value="34" />
       <Setter Property="Margin" Value="4,0,0,0" />
-      <Setter Property="Padding" Value="10,0" />
+      <Setter Property="Padding" Value="0" />
       <Setter Property="Background" Value="#E2E8F0" />
       <Setter Property="BorderBrush" Value="#CBD5E1" />
       <Setter Property="Foreground" Value="#0F172A" />
       <Setter Property="Cursor" Value="Hand" />
     </Style>
-    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
-      <Setter Property="Background" Value="#2563EB" />
-      <Setter Property="BorderBrush" Value="#1D4ED8" />
+    <Style x:Key="AddButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
+      <Setter Property="Background" Value="#16A34A" />
+      <Setter Property="BorderBrush" Value="#15803D" />
       <Setter Property="Foreground" Value="White" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="ToolTip" Value="Add field" />
+    </Style>
+    <Style x:Key="DeleteButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
+      <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+      <Setter Property="Content" Value="&#xE74D;" />
+      <Setter Property="ToolTip" Value="Delete" />
+      <Setter Property="Background" Value="#FEE2E2" />
+      <Setter Property="BorderBrush" Value="#FCA5A5" />
+      <Setter Property="Foreground" Value="#991B1B" />
+    </Style>
+    <Style x:Key="FieldActionButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
+      <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+      <Setter Property="Content" Value="&#xE70F;" />
+      <Setter Property="ToolTip" Value="Edit" />
+      <Style.Triggers>
+        <DataTrigger Binding="{Binding IsEditing}" Value="True">
+          <Setter Property="Content" Value="&#xE73E;" />
+          <Setter Property="ToolTip" Value="Save" />
+          <Setter Property="Background" Value="#DCFCE7" />
+          <Setter Property="BorderBrush" Value="#86EFAC" />
+          <Setter Property="Foreground" Value="#166534" />
+        </DataTrigger>
+      </Style.Triggers>
     </Style>
     <Style TargetType="TextBox">
       <Setter Property="Padding" Value="8,6" />
@@ -52,40 +76,15 @@
                   Orientation="Horizontal"
                   VerticalAlignment="Center"
                   Margin="12,0,0,0">
-        <CheckBox Content="Edit"
-                  IsChecked="{Binding IsEditMode}"
-                  Margin="0,0,10,0" />
         <CheckBox Content="Top"
-                  IsChecked="{Binding IsAlwaysOnTop}" />
+                  IsChecked="{Binding IsAlwaysOnTop}"
+                  VerticalAlignment="Center" />
+        <Button Content="+"
+                Style="{StaticResource AddButton}"
+                Margin="8,0,0,0"
+                Click="AddField_Click" />
       </StackPanel>
     </Grid>
-
-    <Border DockPanel.Dock="Bottom"
-            BorderThickness="1,0,0,0"
-            BorderBrush="#E2E8F0"
-            Padding="0,10,0,0"
-            Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}">
-      <Grid>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition />
-          <ColumnDefinition Width="Auto" />
-          <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
-
-        <Button Content="+ Add"
-                Style="{StaticResource IconButton}"
-                HorizontalAlignment="Left"
-                Click="AddField_Click" />
-        <Button Grid.Column="1"
-                Content="Save"
-                Style="{StaticResource IconButton}"
-                Click="Save_Click" />
-        <Button Grid.Column="2"
-                Content="Save &amp; Close"
-                Style="{StaticResource PrimaryButton}"
-                Click="SaveAndClose_Click" />
-      </Grid>
-    </Border>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
       <ItemsControl ItemsSource="{Binding Fields}">
@@ -98,13 +97,28 @@
                     Padding="6"
                     Margin="0,0,0,6"
                     PreviewMouseLeftButtonDown="FieldCard_PreviewMouseLeftButtonDown">
-              <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
-                       AcceptsReturn="True"
-                       IsReadOnly="{Binding DataContext.IsPasteMode, RelativeSource={RelativeSource AncestorType=Window}}"
-                       TextWrapping="Wrap"
-                       MinHeight="34"
-                       MaxHeight="72"
-                       Foreground="#334155" />
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                         AcceptsReturn="True"
+                         IsReadOnly="{Binding IsReadOnly}"
+                         TextWrapping="Wrap"
+                         MinHeight="34"
+                         MaxHeight="72"
+                         Foreground="#334155" />
+
+                <Button Grid.Column="1"
+                        Style="{StaticResource FieldActionButton}"
+                        Click="ToggleEditField_Click" />
+                <Button Grid.Column="2"
+                        Style="{StaticResource DeleteButton}"
+                        Click="DeleteField_Click" />
+              </Grid>
             </Border>
           </DataTemplate>
         </ItemsControl.ItemTemplate>

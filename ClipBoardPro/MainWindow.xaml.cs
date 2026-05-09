@@ -1,10 +1,11 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Interop;
+using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using JobFillHelper.Models;
 using JobFillHelper.Services;
 
@@ -15,9 +16,8 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private readonly FieldStore _fieldStore = new();
     private readonly WindowPasteService _pasteService = new();
     private bool _isAlwaysOnTop = true;
-    private bool _isEditMode;
     private HwndSource? _hwndSource;
-    private string _statusText = "Paste mode keeps the browser field active. Turn on Edit to change saved values.";
+    private string _statusText = "Click a saved value to paste it.";
 
     public MainWindow()
     {
@@ -56,26 +56,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
-    public bool IsEditMode
-    {
-        get => _isEditMode;
-        set
-        {
-            if (_isEditMode == value)
-            {
-                return;
-            }
-
-            _isEditMode = value;
-            StatusText = value
-                ? "Edit mode is on. Update values, then save."
-                : "Paste mode keeps the browser field active.";
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(IsPasteMode));
-        }
-    }
-
-    public bool IsPasteMode => !IsEditMode;
+    public bool IsPasteMode => Fields.All(field => !field.IsEditing);
 
     public string StatusText
     {
@@ -96,7 +77,12 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private async void FieldCard_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (!IsPasteMode || GetField(sender) is not { } field)
+        if (FindAncestor<System.Windows.Controls.Button>(e.OriginalSource as DependencyObject) is not null)
+        {
+            return;
+        }
+
+        if (GetField(sender) is not { } field || field.IsEditing)
         {
             return;
         }
@@ -108,25 +94,119 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private void AddField_Click(object sender, RoutedEventArgs e)
     {
-        Fields.Add(new FillField { Value = "" });
-        StatusText = "New field added.";
+        StopEditingAllFields();
+        Fields.Add(new FillField { Value = "", IsEditing = true });
+        OnPropertyChanged(nameof(IsPasteMode));
+        StatusText = "New field ready to edit.";
     }
 
-    private void Save_Click(object sender, RoutedEventArgs e)
+    private void ToggleEditField_Click(object sender, RoutedEventArgs e)
     {
-        _fieldStore.Save(Fields);
-        StatusText = "Saved locally.";
+        if (GetField(sender) is not { } field)
+        {
+            return;
+        }
+
+        if (field.IsEditing)
+        {
+            field.IsEditing = false;
+            _fieldStore.Save(Fields);
+            StatusText = "Saved.";
+        }
+        else
+        {
+            StopEditingAllFields();
+            field.IsEditing = true;
+            StatusText = "Editing field.";
+            FocusFieldTextBox(sender as DependencyObject);
+        }
+
+        OnPropertyChanged(nameof(IsPasteMode));
     }
 
-    private void SaveAndClose_Click(object sender, RoutedEventArgs e)
+    private void DeleteField_Click(object sender, RoutedEventArgs e)
     {
+        if (GetField(sender) is not { } field)
+        {
+            return;
+        }
+
+        Fields.Remove(field);
         _fieldStore.Save(Fields);
-        Close();
+        OnPropertyChanged(nameof(IsPasteMode));
+        StatusText = "Field deleted.";
+    }
+
+    private void FocusFieldTextBox(DependencyObject? source)
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            Activate();
+
+            var row = FindAncestor<Border>(source);
+            var textBox = FindVisualChild<System.Windows.Controls.TextBox>(row);
+            if (textBox is null)
+            {
+                return;
+            }
+
+            textBox.Focus();
+            Keyboard.Focus(textBox);
+            textBox.CaretIndex = textBox.Text.Length;
+        });
+    }
+
+    private void StopEditingAllFields()
+    {
+        foreach (var field in Fields)
+        {
+            field.IsEditing = false;
+        }
     }
 
     private static FillField? GetField(object sender)
     {
         return (sender as FrameworkElement)?.DataContext as FillField;
+    }
+
+    private static T? FindAncestor<T>(DependencyObject? current) where T : DependencyObject
+    {
+        while (current is not null)
+        {
+            if (current is T match)
+            {
+                return match;
+            }
+
+            current = System.Windows.Media.VisualTreeHelper.GetParent(current);
+        }
+
+        return null;
+    }
+
+    private static T? FindVisualChild<T>(DependencyObject? current) where T : DependencyObject
+    {
+        if (current is null)
+        {
+            return null;
+        }
+
+        for (var index = 0; index < System.Windows.Media.VisualTreeHelper.GetChildrenCount(current); index++)
+        {
+            var child = System.Windows.Media.VisualTreeHelper.GetChild(current, index);
+            if (child is T match)
+            {
+                return match;
+            }
+
+            var nestedMatch = FindVisualChild<T>(child);
+            if (nestedMatch is not null)
+            {
+                return nestedMatch;
+            }
+        }
+
+        return null;
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
