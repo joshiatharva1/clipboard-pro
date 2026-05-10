@@ -6,5 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Assets\clipboard.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\clipboard.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\clipboard.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
