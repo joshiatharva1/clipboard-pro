@@ -17,6 +17,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private readonly WindowPasteService _pasteService = new();
     private bool _isAlwaysOnTop = true;
     private HwndSource? _hwndSource;
+    private FillField? _pressedField;
+    private System.Windows.Point _dragStartPoint;
+    private bool _suppressClickPaste;
+    private bool _canDropOnCurrentTarget;
     private string _statusText = "Click a saved value to paste it.";
 
     public MainWindow()
@@ -75,7 +79,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    private async void FieldCard_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void FieldCard_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (FindAncestor<System.Windows.Controls.Button>(e.OriginalSource as DependencyObject) is not null)
         {
@@ -87,13 +91,112 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             return;
         }
 
+        _pressedField = field;
+        _dragStartPoint = e.GetPosition(this);
+    }
+
+    private async void FieldCard_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (_suppressClickPaste)
+        {
+            _suppressClickPaste = false;
+            _pressedField = null;
+            return;
+        }
+
+        if (FindAncestor<System.Windows.Controls.Button>(e.OriginalSource as DependencyObject) is not null)
+        {
+            return;
+        }
+
+        if (GetField(sender) is not { } field || field.IsEditing || _pressedField != field)
+        {
+            return;
+        }
+
+        _pressedField = null;
         e.Handled = true;
         var result = await _pasteService.PasteTextAsync(field.Value);
         StatusText = result;
     }
 
+    private void FieldCard_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed || _pressedField is null || _pressedField.IsEditing)
+        {
+            return;
+        }
+
+        var currentPosition = e.GetPosition(this);
+        var movedFarEnough = Math.Abs(currentPosition.X - _dragStartPoint.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                             Math.Abs(currentPosition.Y - _dragStartPoint.Y) > SystemParameters.MinimumVerticalDragDistance;
+
+        if (!movedFarEnough)
+        {
+            return;
+        }
+
+        _suppressClickPaste = true;
+        _canDropOnCurrentTarget = false;
+        DragDrop.DoDragDrop((DependencyObject)sender, _pressedField, System.Windows.DragDropEffects.Move);
+        _canDropOnCurrentTarget = false;
+        _pressedField = null;
+    }
+
+    private void FieldCard_DragOver(object sender, System.Windows.DragEventArgs e)
+    {
+        _canDropOnCurrentTarget = CanDropOnField(sender, e);
+        e.Effects = _canDropOnCurrentTarget ? System.Windows.DragDropEffects.Move : System.Windows.DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void FieldCard_GiveFeedback(object sender, System.Windows.GiveFeedbackEventArgs e)
+    {
+        Mouse.SetCursor(_canDropOnCurrentTarget ? System.Windows.Input.Cursors.SizeAll : System.Windows.Input.Cursors.No);
+        e.UseDefaultCursors = false;
+        e.Handled = true;
+    }
+
+    private bool CanDropOnField(object sender, System.Windows.DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent(typeof(FillField)) || GetField(sender) is not { } targetField)
+        {
+            return false;
+        }
+
+        var sourceField = (FillField)e.Data.GetData(typeof(FillField))!;
+        return sourceField != targetField && !sourceField.IsEditing && !targetField.IsEditing;
+    }
+
+    private void FieldCard_Drop(object sender, System.Windows.DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent(typeof(FillField)) || GetField(sender) is not { } targetField)
+        {
+            return;
+        }
+
+        var sourceField = (FillField)e.Data.GetData(typeof(FillField))!;
+        if (sourceField == targetField || sourceField.IsEditing || targetField.IsEditing)
+        {
+            return;
+        }
+
+        var oldIndex = Fields.IndexOf(sourceField);
+        var newIndex = Fields.IndexOf(targetField);
+        if (oldIndex < 0 || newIndex < 0 || oldIndex == newIndex)
+        {
+            return;
+        }
+
+        Fields.Move(oldIndex, newIndex);
+        _fieldStore.Save(Fields);
+        StatusText = "Order updated.";
+        e.Handled = true;
+    }
+
     private void AddField_Click(object sender, RoutedEventArgs e)
     {
+        RemoveBlankFields();
         StopEditingAllFields();
         Fields.Add(new FillField { Value = "", IsEditing = true });
         OnPropertyChanged(nameof(IsPasteMode));
@@ -109,6 +212,14 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
         if (field.IsEditing)
         {
+            if (string.IsNullOrWhiteSpace(field.Value))
+            {
+                StatusText = "Enter a value before saving.";
+                FocusFieldTextBox(sender as DependencyObject);
+                return;
+            }
+
+            field.Value = field.Value.Trim();
             field.IsEditing = false;
             _fieldStore.Save(Fields);
             StatusText = "Saved.";
@@ -161,6 +272,17 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         foreach (var field in Fields)
         {
             field.IsEditing = false;
+        }
+    }
+
+    private void RemoveBlankFields()
+    {
+        for (var index = Fields.Count - 1; index >= 0; index--)
+        {
+            if (string.IsNullOrWhiteSpace(Fields[index].Value))
+            {
+                Fields.RemoveAt(index);
+            }
         }
     }
 

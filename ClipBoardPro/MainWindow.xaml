@@ -97,7 +97,13 @@
                     CornerRadius="6"
                     Padding="6"
                     Margin="0,0,0,6"
-                    PreviewMouseLeftButtonDown="FieldCard_PreviewMouseLeftButtonDown">
+                    AllowDrop="True"
+                    PreviewMouseLeftButtonDown="FieldCard_PreviewMouseLeftButtonDown"
+                    PreviewMouseLeftButtonUp="FieldCard_PreviewMouseLeftButtonUp"
+                    PreviewMouseMove="FieldCard_PreviewMouseMove"
+                    DragOver="FieldCard_DragOver"
+                    GiveFeedback="FieldCard_GiveFeedback"
+                    Drop="FieldCard_Drop">
               <Grid>
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition />
