@@ -1,5 +1,6 @@
-namespace JobFillHelper;
+﻿namespace ClipBoardPro;
 
 public partial class App : System.Windows.Application
 {
 }
+

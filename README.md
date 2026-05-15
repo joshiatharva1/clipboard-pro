@@ -38,25 +38,25 @@ Install the .NET 8 SDK from Microsoft:
 Open a terminal in the project folder and run:
 
 ```powershell
-dotnet run --project .\ClipBoardPro\JobFillHelper.csproj
+dotnet run --project .\ClipBoardPro\ClipBoardPro.csproj
 ```
 
 If `dotnet` is not recognized, use the full installed path:
 
 ```powershell
-& 'C:\Program Files\dotnet\dotnet.exe' run --project .\ClipBoardPro\JobFillHelper.csproj
+& 'C:\Program Files\dotnet\dotnet.exe' run --project .\ClipBoardPro\ClipBoardPro.csproj
 ```
 
 ### Build The App
 
 ```powershell
-dotnet build .\ClipBoardPro\JobFillHelper.csproj
+dotnet build .\ClipBoardPro\ClipBoardPro.csproj
 ```
 
 The debug executable is generated at:
 
 ```text
-ClipBoardPro\bin\Debug\net8.0-windows\JobFillHelper.exe
+ClipBoardPro\bin\Debug\net8.0-windows\ClipBoard Pro.exe
 ```
 
 ## How To Use
@@ -84,7 +84,7 @@ ClipBoard Pro/
     ├── App.xaml
     ├── MainWindow.xaml
     ├── MainWindow.xaml.cs
-    └── JobFillHelper.csproj
+    └── ClipBoardPro.csproj
 ```
 
 ## Privacy Note
@@ -93,7 +93,6 @@ ClipBoard Pro is designed as a local desktop utility. The saved values are store
 
 ## Future Improvements
 
-- Rename the generated executable/project from the original `JobFillHelper` name to `ClipBoard Pro`.
 - Add import/export support for saved fields.
 - Add optional categories for grouping values.
 - Add a packaged installer for easier installation.
@@ -102,3 +101,5 @@ ClipBoard Pro is designed as a local desktop utility. The saved values are store
 ## License
 
 This project is currently intended for personal use. Add a license before distributing it publicly.
+
+

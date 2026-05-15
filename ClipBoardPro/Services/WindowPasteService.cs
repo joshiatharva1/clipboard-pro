@@ -1,10 +1,10 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using Forms = System.Windows.Forms;
 
-namespace JobFillHelper.Services;
+namespace ClipBoardPro.Services;
 
 public sealed class WindowPasteService : IDisposable
 {
@@ -437,3 +437,4 @@ public sealed class WindowPasteService : IDisposable
         public int Bottom;
     }
 }
+

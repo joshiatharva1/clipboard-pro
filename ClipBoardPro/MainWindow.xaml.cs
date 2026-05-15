@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -6,10 +6,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using JobFillHelper.Models;
-using JobFillHelper.Services;
+using ClipBoardPro.Models;
+using ClipBoardPro.Services;
 
-namespace JobFillHelper;
+namespace ClipBoardPro;
 
 public partial class MainWindow : Window, INotifyPropertyChanged
 {

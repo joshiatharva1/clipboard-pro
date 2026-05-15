@@ -1,9 +1,9 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
-using JobFillHelper.Models;
+using ClipBoardPro.Models;
 
-namespace JobFillHelper.Services;
+namespace ClipBoardPro.Services;
 
 public sealed class FieldStore
 {
@@ -17,9 +17,15 @@ public sealed class FieldStore
     public FieldStore()
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var directory = Path.Combine(appData, "JobFillHelper");
+        var directory = Path.Combine(appData, "ClipBoard Pro");
         Directory.CreateDirectory(directory);
         _storagePath = Path.Combine(directory, "fields.json");
+
+        var oldStoragePath = Path.Combine(appData, "JobFillHelper", "fields.json");
+        if (!File.Exists(_storagePath) && File.Exists(oldStoragePath))
+        {
+            File.Copy(oldStoragePath, _storagePath);
+        }
     }
 
     public ObservableCollection<FillField> Load()
@@ -64,3 +70,4 @@ public sealed class FieldStore
         File.WriteAllText(_storagePath, json);
     }
 }
+

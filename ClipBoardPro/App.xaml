@@ -1,4 +1,4 @@
-<Application x:Class="JobFillHelper.App"
+﻿<Application x:Class="ClipBoardPro.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
@@ -8,3 +8,4 @@
     <SolidColorBrush x:Key="MutedBrush" Color="#64748B" />
   </Application.Resources>
 </Application>
+

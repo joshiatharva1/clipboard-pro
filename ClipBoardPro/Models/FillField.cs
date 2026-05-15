@@ -1,8 +1,8 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
-namespace JobFillHelper.Models;
+namespace ClipBoardPro.Models;
 
 public sealed class FillField : INotifyPropertyChanged
 {
