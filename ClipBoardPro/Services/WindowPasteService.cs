@@ -31,59 +31,63 @@ public sealed class WindowPasteService : IDisposable
 
     public async Task<string> PasteTextAsync(string text)
     {
-        if (string.IsNullOrEmpty(text))
+        if (string.IsNullOrWhiteSpace(text))
         {
             return "Nothing to paste.";
         }
 
-        SetClipboardText(text);
-
+        var valueToPaste = text.Trim();
         var target = _lastExternalWindow;
         if (target == IntPtr.Zero || !IsWindow(target))
         {
-            return "Copied, but no browser/form window was captured yet.";
+            return "No browser/form window was captured yet.";
         }
 
         if (!IsExternalWindow(GetForegroundWindow()))
         {
             BringTargetToForeground(target);
-            await Task.Delay(180);
+            await Task.Delay(120);
         }
 
-        await Task.Delay(120);
-
-        var typedInputs = TypeText(text);
-        if (typedInputs > 0)
+        if (!TrySetClipboardText(valueToPaste))
         {
-            return $"Typed {text.Length} characters into the focused field.";
+            ReleaseModifierKeys();
+            var typedInputs = TypeText(valueToPaste);
+            ReleaseModifierKeys();
+            return typedInputs > 0
+                ? $"Typed {valueToPaste.Length} characters into the focused field."
+                : $"Could not update clipboard or type text. Direct typing error was {_lastSendInputError}.";
         }
-
-        var typeError = _lastSendInputError;
 
         try
         {
+            ReleaseModifierKeys();
             Forms.SendKeys.SendWait("^v");
-            return $"Sent paste with SendKeys. SendInput error was {typeError}.";
+            ReleaseModifierKeys();
+            await Task.Delay(120);
+            return "Pasted current field.";
         }
         catch (Exception exception)
         {
             var sendKeysError = exception.GetType().Name;
-            var focusedWindow = GetFocusedWindow(target);
-            _ = focusedWindow != IntPtr.Zero && PostMessage(focusedWindow, WindowMessages.Paste, IntPtr.Zero, IntPtr.Zero);
-
-            await Task.Delay(80);
             var sentInputs = SendCtrlV();
+            ReleaseModifierKeys();
+            await Task.Delay(120);
             return sentInputs == 4
-                ? $"Fallback paste shortcut sent to browser. Earlier error was {typeError}."
-                : $"Blocked. Direct typing error {typeError}; SendKeys error {sendKeysError}; paste inputs {sentInputs}/4, error {_lastSendInputError}.";
+                ? "Pasted current field with fallback shortcut."
+                : $"Paste blocked. SendKeys error {sendKeysError}; shortcut inputs {sentInputs}/4, error {_lastSendInputError}.";
+        }
+        finally
+        {
+            await Task.Delay(180);
+            ClearClipboardIfItStillContains(valueToPaste);
         }
     }
-
     public void CopyText(string text)
     {
         if (!string.IsNullOrEmpty(text))
         {
-            SetClipboardText(text);
+            TrySetClipboardText(text);
         }
     }
 
@@ -134,6 +138,20 @@ public sealed class WindowPasteService : IDisposable
         return SendInputs(inputs);
     }
 
+    private void ReleaseModifierKeys()
+    {
+        var inputs = new[]
+        {
+            CreateKeyboardInput(VirtualKeys.Control, KeyEventFlags.KeyUp),
+            CreateKeyboardInput(VirtualKeys.LeftControl, KeyEventFlags.KeyUp),
+            CreateKeyboardInput(VirtualKeys.RightControl, KeyEventFlags.KeyUp),
+            CreateKeyboardInput(VirtualKeys.Shift, KeyEventFlags.KeyUp),
+            CreateKeyboardInput(VirtualKeys.Alt, KeyEventFlags.KeyUp)
+        };
+
+        SendInputs(inputs);
+    }
+
     private uint TypeText(string text)
     {
         var normalizedText = text.Replace("\r\n", "\n").Replace('\r', '\n');
@@ -162,16 +180,44 @@ public sealed class WindowPasteService : IDisposable
         return totalSent;
     }
 
-    private static void SetClipboardText(string text)
+    private static bool TrySetClipboardText(string text)
     {
-        var data = new System.Windows.DataObject();
-        data.SetText(text);
-
-        for (var attempt = 0; attempt < 5; attempt++)
+        for (var attempt = 0; attempt < 8; attempt++)
         {
             try
             {
-                System.Windows.Clipboard.SetDataObject(data, true);
+                System.Windows.Clipboard.Clear();
+                System.Windows.Clipboard.SetText(text, System.Windows.TextDataFormat.UnicodeText);
+
+                if (System.Windows.Clipboard.ContainsText(System.Windows.TextDataFormat.UnicodeText) &&
+                    System.Windows.Clipboard.GetText(System.Windows.TextDataFormat.UnicodeText) == text)
+                {
+                    return true;
+                }
+            }
+            catch (ExternalException)
+            {
+                Thread.Sleep(50);
+            }
+
+            Thread.Sleep(25);
+        }
+
+        return false;
+    }
+
+    private static void ClearClipboardIfItStillContains(string text)
+    {
+        for (var attempt = 0; attempt < 4; attempt++)
+        {
+            try
+            {
+                if (System.Windows.Clipboard.ContainsText(System.Windows.TextDataFormat.UnicodeText) &&
+                    System.Windows.Clipboard.GetText(System.Windows.TextDataFormat.UnicodeText) == text)
+                {
+                    System.Windows.Clipboard.Clear();
+                }
+
                 return;
             }
             catch (ExternalException)
@@ -179,10 +225,7 @@ public sealed class WindowPasteService : IDisposable
                 Thread.Sleep(40);
             }
         }
-
-        System.Windows.Clipboard.SetText(text);
     }
-
     private static IntPtr GetFocusedWindow(IntPtr fallbackWindow)
     {
         var targetThreadId = GetWindowThreadProcessId(fallbackWindow, out _);
@@ -340,6 +383,10 @@ public sealed class WindowPasteService : IDisposable
     private static class VirtualKeys
     {
         public const ushort Control = 0x11;
+        public const ushort LeftControl = 0xA2;
+        public const ushort RightControl = 0xA3;
+        public const ushort Shift = 0x10;
+        public const ushort Alt = 0x12;
         public const ushort V = 0x56;
     }
 

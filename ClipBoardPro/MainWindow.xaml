@@ -30,6 +30,17 @@
       <Setter Property="FontWeight" Value="Bold" />
       <Setter Property="ToolTip" Value="Add field" />
     </Style>
+    <Style x:Key="DragHandle" TargetType="TextBlock">
+      <Setter Property="Width" Value="22" />
+      <Setter Property="Margin" Value="0,0,6,0" />
+      <Setter Property="VerticalAlignment" Value="Stretch" />
+      <Setter Property="TextAlignment" Value="Center" />
+      <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+      <Setter Property="Text" Value="&#xE700;" />
+      <Setter Property="Foreground" Value="#64748B" />
+      <Setter Property="Cursor" Value="SizeAll" />
+      <Setter Property="ToolTip" Value="Drag to reorder" />
+    </Style>
     <Style x:Key="DeleteButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
       <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
       <Setter Property="Content" Value="&#xE74D;" />
@@ -37,6 +48,14 @@
       <Setter Property="Background" Value="#FEE2E2" />
       <Setter Property="BorderBrush" Value="#FCA5A5" />
       <Setter Property="Foreground" Value="#991B1B" />
+    </Style>
+    <Style x:Key="PasteButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
+      <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+      <Setter Property="Content" Value="&#xE77F;" />
+      <Setter Property="ToolTip" Value="Paste" />
+      <Setter Property="Background" Value="#DBEAFE" />
+      <Setter Property="BorderBrush" Value="#93C5FD" />
+      <Setter Property="Foreground" Value="#1D4ED8" />
     </Style>
     <Style x:Key="FieldActionButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
       <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
@@ -98,20 +117,25 @@
                     Padding="6"
                     Margin="0,0,0,6"
                     AllowDrop="True"
-                    PreviewMouseLeftButtonDown="FieldCard_PreviewMouseLeftButtonDown"
-                    PreviewMouseLeftButtonUp="FieldCard_PreviewMouseLeftButtonUp"
-                    PreviewMouseMove="FieldCard_PreviewMouseMove"
                     DragOver="FieldCard_DragOver"
                     GiveFeedback="FieldCard_GiveFeedback"
                     Drop="FieldCard_Drop">
               <Grid>
                 <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
                   <ColumnDefinition />
+                  <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                <TextBlock Grid.Column="0"
+                           Style="{StaticResource DragHandle}"
+                           PreviewMouseLeftButtonDown="DragHandle_PreviewMouseLeftButtonDown"
+                           PreviewMouseMove="DragHandle_PreviewMouseMove" />
+
+                <TextBox Grid.Column="1"
+                         Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
                          AcceptsReturn="True"
                          IsReadOnly="{Binding IsReadOnly}"
                          TextWrapping="Wrap"
@@ -119,10 +143,13 @@
                          MaxHeight="72"
                          Foreground="#334155" />
 
-                <Button Grid.Column="1"
+                <Button Grid.Column="2"
+                        Style="{StaticResource PasteButton}"
+                        Click="PasteField_Click" />
+                <Button Grid.Column="3"
                         Style="{StaticResource FieldActionButton}"
                         Click="ToggleEditField_Click" />
-                <Button Grid.Column="2"
+                <Button Grid.Column="4"
                         Style="{StaticResource DeleteButton}"
                         Click="DeleteField_Click" />
               </Grid>

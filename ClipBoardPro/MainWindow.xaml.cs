@@ -17,10 +17,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private readonly WindowPasteService _pasteService = new();
     private bool _isAlwaysOnTop = true;
     private HwndSource? _hwndSource;
-    private FillField? _pressedField;
+    private FillField? _draggedField;
     private System.Windows.Point _dragStartPoint;
-    private bool _suppressClickPaste;
     private bool _canDropOnCurrentTarget;
+    private bool _isPasting;
     private string _statusText = "Click a saved value to paste it.";
 
     public MainWindow()
@@ -79,50 +79,43 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    private void FieldCard_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private async void PasteField_Click(object sender, RoutedEventArgs e)
     {
-        if (FindAncestor<System.Windows.Controls.Button>(e.OriginalSource as DependencyObject) is not null)
+        if (_isPasting || GetField(sender) is not { } field || field.IsEditing)
         {
             return;
         }
 
+        ClearFieldInteractionState();
+        e.Handled = true;
+        _isPasting = true;
+        try
+        {
+            var result = await _pasteService.PasteTextAsync(field.Value);
+            StatusText = result;
+        }
+        finally
+        {
+            _isPasting = false;
+            FocusAppShell();
+        }
+    }
+    private void DragHandle_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
         if (GetField(sender) is not { } field || field.IsEditing)
         {
+            _draggedField = null;
             return;
         }
 
-        _pressedField = field;
+        _draggedField = field;
         _dragStartPoint = e.GetPosition(this);
-    }
-
-    private async void FieldCard_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-    {
-        if (_suppressClickPaste)
-        {
-            _suppressClickPaste = false;
-            _pressedField = null;
-            return;
-        }
-
-        if (FindAncestor<System.Windows.Controls.Button>(e.OriginalSource as DependencyObject) is not null)
-        {
-            return;
-        }
-
-        if (GetField(sender) is not { } field || field.IsEditing || _pressedField != field)
-        {
-            return;
-        }
-
-        _pressedField = null;
         e.Handled = true;
-        var result = await _pasteService.PasteTextAsync(field.Value);
-        StatusText = result;
     }
 
-    private void FieldCard_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    private void DragHandle_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
     {
-        if (e.LeftButton != MouseButtonState.Pressed || _pressedField is null || _pressedField.IsEditing)
+        if (e.LeftButton != MouseButtonState.Pressed || _draggedField is null || _draggedField.IsEditing)
         {
             return;
         }
@@ -136,11 +129,10 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             return;
         }
 
-        _suppressClickPaste = true;
         _canDropOnCurrentTarget = false;
-        DragDrop.DoDragDrop((DependencyObject)sender, _pressedField, System.Windows.DragDropEffects.Move);
+        DragDrop.DoDragDrop((DependencyObject)sender, _draggedField, System.Windows.DragDropEffects.Move);
         _canDropOnCurrentTarget = false;
-        _pressedField = null;
+        _draggedField = null;
     }
 
     private void FieldCard_DragOver(object sender, System.Windows.DragEventArgs e)
@@ -193,7 +185,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         StatusText = "Order updated.";
         e.Handled = true;
     }
-
     private void AddField_Click(object sender, RoutedEventArgs e)
     {
         RemoveBlankFields();
@@ -264,6 +255,22 @@ public partial class MainWindow : Window, INotifyPropertyChanged
             textBox.Focus();
             Keyboard.Focus(textBox);
             textBox.CaretIndex = textBox.Text.Length;
+        });
+    }
+
+    private void ClearFieldInteractionState()
+    {
+        _draggedField = null;
+        _canDropOnCurrentTarget = false;
+    }
+
+    private void FocusAppShell()
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            Activate();
+            Keyboard.ClearFocus();
+            Focus();
         });
     }
 
@@ -338,18 +345,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
 
     private IntPtr WindowProcedure(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (message == NativeMethods.WmMouseActivate && IsPasteMode)
-        {
-            handled = true;
-            return new IntPtr(NativeMethods.MaNoActivate);
-        }
-
         return IntPtr.Zero;
-    }
-
-    private static class NativeMethods
-    {
-        public const int WmMouseActivate = 0x0021;
-        public const int MaNoActivate = 3;
     }
 }
